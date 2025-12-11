@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rating Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Rating System Debug</h1>
+    
+    <div class="debug-section">
+        <h2>Authentication Status</h2>
+        <div id="auth-status">Loading...</div>
+        <button onclick="checkAuth()">Check Auth</button>
+        <button onclick="simulateLogin()">Simulate Login</button>
+        <button onclick="clearAuth()">Clear Auth</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test Rating Button</h2>
+        <button class="btn btn-warning" onclick="testRateAgent(1, 'Test Agent')" id="test-rate-btn">⭐ Rate Agent</button>
+        <div id="rating-result"></div>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            document.getElementById('auth-status').innerHTML = `
+                <pre>${JSON.stringify(userInfo, null, 2)}</pre>
+                <p>User ID: ${userInfo.id || 'Not logged in'}</p>
+                <p>Full Name: ${userInfo.full_name || 'N/A'}</p>
+            `;
+        }
+        
+        function simulateLogin() {
+            const testUser = {
+                id: 123,
+                full_name: 'Test User',
+                email: 'test@example.com',
+                user_type: 'investor'
+            };
+            localStorage.setItem('userInfo', JSON.stringify(testUser));
+            checkAuth();
+            alert('Simulated login successful!');
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('userInfo');
+            checkAuth();
+            alert('Auth cleared!');
+        }
+        
+        function testRateAgent(agentId, agentName) {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            
+            document.getElementById('rating-result').innerHTML = `
+                <p>Function called with Agent ID: ${agentId}, Name: ${agentName}</p>
+                <p>User logged in: ${userInfo.id ? 'Yes' : 'No'}</p>
+                <p>User ID: ${userInfo.id || 'None'}</p>
+            `;
+            
+            if (!userInfo.id) {
+                alert('Please log in to rate agents.');
+                return;
+            }
+            
+            const rating = prompt(`Rate ${agentName} (1-5 stars):`);
+            if (rating && rating >= 1 && rating <= 5) {
+                document.getElementById('rating-result').innerHTML += `<p>Would submit rating: ${rating}</p>`;
+                alert(`Rating ${rating} would be submitted for ${agentName}`);
+            }
+        }
+        
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>

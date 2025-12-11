@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Messaging System - PROPLEDGER</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-section {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .test-result {
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        .success { background: rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; }
+        .error { background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; }
+        .info { background: rgba(0, 212, 255, 0.1); border-left: 4px solid var(--blockchain-blue); }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="index.html" class="logo">PROPLEDGER</a>
+                <div class="auth-buttons">
+                    <a href="agent-dashboard.html" class="btn btn-primary">Agent Dashboard</a>
+                    <a href="dashboard.html" class="btn btn-secondary">User Dashboard</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container" style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+            <h1 style="color: var(--blockchain-blue); margin-bottom: 2rem;">🧪 Messaging System Test</h1>
+
+            <!-- Test 1: Database Setup -->
+            <div class="test-section">
+                <h3 style="color: var(--blockchain-blue);">1. Database Setup Test</h3>
+                <button onclick="testDatabaseSetup()" class="btn btn-primary">Test Database</button>
+                <div id="dbTestResult"></div>
+            </div>
+
+            <!-- Test 2: Create Test Data -->
+            <div class="test-section">
+                <h3 style="color: var(--blockchain-blue);">2. Create Test Data</h3>
+                <button onclick="createTestData()" class="btn btn-primary">Create Test Users & Agents</button>
+                <div id="testDataResult"></div>
+            </div>
+
+            <!-- Test 3: Send Test Message -->
+            <div class="test-section">
+                <h3 style="color: var(--blockchain-blue);">3. Send Test Message</h3>
+                <button onclick="sendTestMessage()" class="btn btn-primary">Send Test Message</button>
+                <div id="messageTestResult"></div>
+            </div>
+
+            <!-- Test 4: Agent Messages API -->
+            <div class="test-section">
+                <h3 style="color: var(--blockchain-blue);">4. Agent Messages API Test</h3>
+                <button onclick="testAgentMessagesAPI()" class="btn btn-primary">Test Agent API</button>
+                <div id="apiTestResult"></div>
+            </div>
+
+            <!-- Test 5: User Messages API -->
+            <div class="test-section">
+                <h3 style="color: var(--blockchain-blue);">5. User Messages API Test</h3>
+                <button onclick="testUserMessagesAPI()" class="btn btn-primary">Test User API</button>
+                <div id="userApiTestResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function testDatabaseSetup() {
+            const resultDiv = document.getElementById('dbTestResult');
+            resultDiv.innerHTML = '<div class="info">Testing database connection...</div>';
+            
+            try {
+                const response = await fetch('../php/test_send_message_to_agent.php');
+                const text = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Database test completed</div><div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 5px; margin-top: 1rem;">${text}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Database test failed</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createTestData() {
+            const resultDiv = document.getElementById('testDataResult');
+            resultDiv.innerHTML = '<div class="info">Creating test data...</div>';
+            
+            try {
+                const response = await fetch('../php/test_send_message_to_agent.php');
+                const text = await response.text();
+                
+                if (response.ok && text.includes('Test message sent successfully')) {
+                    resultDiv.innerHTML = `<div class="success">✅ Test data created successfully</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to create test data</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function sendTestMessage() {
+            const resultDiv = document.getElementById('messageTestResult');
+            resultDiv.innerHTML = '<div class="info">Sending test message...</div>';
+            
+            try {
+                // This would normally require authentication, but we'll test the endpoint
+                const response = await fetch('../managers/send_message.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        manager: 'Test Agent',
+                        subject: 'API Test Message',
+                        message: 'This is a test message sent via the API',
+                        priority: 'normal'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<div class="success">✅ Message sent successfully</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Failed to send message: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAgentMessagesAPI() {
+            const resultDiv = document.getElementById('apiTestResult');
+            resultDiv.innerHTML = '<div class="info">Testing agent messages API...</div>';
+            
+            try {
+                const response = await fetch('../managers/debug_agent_messages.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Agent API working</div>
+                        <div style="background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 5px; margin-top: 1rem;">
+                            <strong>Messages found:</strong> ${data.total_count}<br>
+                            <strong>Unread:</strong> ${data.unread_count}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Agent API failed: ${data.message}</div>
+                        ${data.debug ? `<pre>${JSON.stringify(data.debug, null, 2)}</pre>` : ''}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUserMessagesAPI() {
+            const resultDiv = document.getElementById('userApiTestResult');
+            resultDiv.innerHTML = '<div class="info">Testing user messages API...</div>';
+            
+            try {
+                const response = await fetch('../managers/get_user_messages.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ User API working</div>
+                        <div style="background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 5px; margin-top: 1rem;">
+                            <strong>Messages found:</strong> ${data.total_count}<br>
+                            <strong>Unread:</strong> ${data.unread_count}<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ User API failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                testDatabaseSetup();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

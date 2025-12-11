@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Flow Test</h1>
+    
+    <div class="section">
+        <h2>Step 1: Check Current Auth Status</h2>
+        <button onclick="checkAllAuth()">Check All Auth Sources</button>
+        <div id="auth-check"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 2: Test Login</h2>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="password">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 3: Test Rating Function</h2>
+        <button onclick="testRating()">Test Rate Agent Function</button>
+        <div id="rating-test"></div>
+    </div>
+
+    <script>
+        function checkAllAuth() {
+            const localStorage_userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const sessionStorage_userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
+            
+            document.getElementById('auth-check').innerHTML = `
+                <h3>LocalStorage userInfo:</h3>
+                <pre>${JSON.stringify(localStorage_userInfo, null, 2)}</pre>
+                <h3>SessionStorage userInfo:</h3>
+                <pre>${JSON.stringify(sessionStorage_userInfo, null, 2)}</pre>
+                <h3>Current User Status:</h3>
+                <p>LocalStorage has user: ${localStorage_userInfo.id ? 'YES' : 'NO'}</p>
+                <p>SessionStorage has user: ${sessionStorage_userInfo.id ? 'YES' : 'NO'}</p>
+            `;
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('../auth/login_handler.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Store user info like the real login does
+                    localStorage.setItem('userInfo', JSON.stringify(result.user));
+                    sessionStorage.setItem('userInfo', JSON.stringify(result.user));
+                    
+                    document.getElementById('login-result').innerHTML = `
+                        <div class="success">✅ Login successful!</div>
+                        <p>User: ${result.user.full_name}</p>
+                        <p>Email: ${result.user.email}</p>
+                        <p>Type: ${result.user.user_type}</p>
+                        <p>ID: ${result.user.id}</p>
+                    `;
+                } else {
+                    document.getElementById('login-result').innerHTML = `
+                        <div class="error">❌ Login failed: ${result.message}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('login-result').innerHTML = `
+                    <div class="error">❌ Login error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        function testRating() {
+            // Simulate the exact rating function from managers.html
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const sessionInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
+            const currentUser = userInfo.id ? userInfo : sessionInfo;
+            
+            document.getElementById('rating-test').innerHTML = `
+                <h3>Rating Function Test:</h3>
+                <p>LocalStorage user: ${userInfo.id || 'None'}</p>
+                <p>SessionStorage user: ${sessionInfo.id || 'None'}</p>
+                <p>Current user: ${currentUser.id || 'None'}</p>
+                <p>Can rate: ${currentUser.id ? 'YES' : 'NO'}</p>
+            `;
+            
+            if (!currentUser.id) {
+                alert('Please log in to rate agents. No user session found.');
+                return;
+            }
+            
+            const rating = prompt(`Rate Test Agent (1-5 stars):`);
+            if (rating && rating >= 1 && rating <= 5) {
+                document.getElementById('rating-test').innerHTML += `
+                    <div class="success">✅ Rating ${rating} would be submitted for user ${currentUser.full_name}</div>
+                `;
+            }
+        }
+        
+        // Check auth on page load
+        checkAllAuth();
+    </script>
+</body>
+</html>
